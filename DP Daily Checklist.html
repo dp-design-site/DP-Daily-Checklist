@@ -6,77 +6,15 @@
   <title>DP Daily Notes</title>
   <link rel="icon" type="image/png" href="img/DP_fav.png">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #90caf9;
-    }
-    .week-counter {
-      text-align: center;
-      font-size: 16px;
-      margin-bottom: 15px;
-      color: #b0bec5;
-    }
-    .progress {
-      width: 100%;
-      background: #333;
-      border-radius: 10px;
-      margin: 20px 0;
-    }
-    .progress-bar {
-      height: 20px;
-      background: #90caf9;
-      width: 0%;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 12px;
-      color: #000;
-    }
-    .checklist {
-      list-style: none;
-      padding: 0;
-    }
-    .checklist li {
-      background: #1e1e1e;
-      margin: 8px 0;
-      padding: 10px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .checklist input {
-      margin-right: 10px;
-    }
-    .hint {
-      font-size: 12px;
-      color: #9e9e9e;
-      margin-top: 4px;
-    }
-    button {
-      background: #90caf9;
-      border: none;
-      padding: 10px 15px;
-      margin: 10px 5px;
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #64b5f6;
-    }
-    .footer {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 14px;
-      color: #9e9e9e;
-    }
+    body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+    h1 { text-align: center; color: #90caf9; }
+    .week-counter { text-align: center; font-size: 16px; margin-bottom: 15px; color: #b0bec5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #333; padding: 10px; text-align: left; }
+    th { background: #1e1e1e; }
+    button { background: #90caf9; border: none; padding: 8px 12px; margin: 5px; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #64b5f6; }
+    .footer { text-align: center; margin-top: 20px; font-size: 14px; color: #9e9e9e; }
   </style>
 </head>
 <body>
@@ -84,146 +22,149 @@
   <div class="week-counter" id="weekCounter"></div>
   <h2 id="dayTitle"></h2>
 
-  <div class="progress">
-    <div class="progress-bar" id="progressBar">0%</div>
-  </div>
-
-  <ul class="checklist" id="taskList"></ul>
+  <table id="dayPlan">
+    <thead>
+      <tr><th>Час</th><th>Задача</th><th>Статус</th></tr>
+    </thead>
+    <tbody id="planBody"></tbody>
+  </table>
 
   <div style="text-align:center">
     <button onclick="recordSleep('bed')">😴 Лягам си</button>
     <button onclick="recordSleep('wake')">🌅 Ставам</button>
+    <button onclick="showHistory()">📊 История</button>
   </div>
 
-  <div class="footer">
-    DP Design Tools © 2025
-  </div>
+  <div class="footer">DP Design Tools © 2025</div>
 
   <script>
-    const tasksByDay = {
-      "monday": [
-        "🚿 Душ сутрин + Nizoral (остави 5 минути)",
-        "💧 Corsodyl (след душ, леко натупай с тампон)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🛏️ Смяна на калъфка (ако е ден за смяна)",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"
-      ],
-      "tuesday": [
-        "🚿 Душ сутрин + Bioblas Zinc",
-        "💧 Corsodyl (след душ)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"
-      ],
-      "wednesday": [
-        "🚿 Душ сутрин + Nizoral (остави 5 минути)",
-        "💧 Corsodyl (след душ)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"
-      ],
-      "thursday": [
-        "🚿 Душ сутрин + Bioblas Zinc",
-        "💧 Corsodyl (след душ)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"
-      ],
-      "friday": [
-        "🚿 Душ сутрин + Nizoral (остави 5 минути)",
-        "💧 Corsodyl (след душ)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер",
-        "🚶 15 мин разходка", "😴 Сън ≥ 7 часа"
-      ],
-      "saturday": [
-        "🚿 Душ сутрин + Bioblas Zinc",
-        "💧 Corsodyl (след душ)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"
-      ],
-      "sunday": [
-        "🚿 Душ сутрин + Nizoral (остави 5 минути)",
-        "💧 Corsodyl (след душ)",
-        "🌙 Фуцидин (само върху големи/възпалени пъпки)",
-        "🚿 Душ вечер + Bioblas Zinc",
-        "🛏️ Смяна на калъфка", "🧴 Смяна на кърпа",
-        "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"
-      ]
-    };
-
-    const dayMap = {
-      "понеделник": "monday",
-      "вторник": "tuesday",
-      "сряда": "wednesday",
-      "четвъртък": "thursday",
-      "петък": "friday",
-      "събота": "saturday",
-      "неделя": "sunday"
-    };
-
-    // Седмичен брояч
-    if (!localStorage.getItem('startDate')) {
-      localStorage.setItem('startDate', new Date());
-    }
+    if (!localStorage.getItem('startDate')) localStorage.setItem('startDate', new Date());
     const startDate = new Date(localStorage.getItem('startDate'));
     const todayDate = new Date();
     const diffDays = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
     const weekNumber = Math.floor(diffDays / 7) + 1;
     document.getElementById('weekCounter').textContent = `Седмица ${weekNumber} от 4`;
-    if (weekNumber > 4) {
-      document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
-    }
+    if (weekNumber > 4) document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
 
+    const dayMap = { "понеделник": "monday", "вторник": "tuesday", "сряда": "wednesday", "четвъртък": "thursday", "петък": "friday", "събота": "saturday", "неделя": "sunday" };
     const todayBG = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
     const today = dayMap[todayBG];
+    document.getElementById('dayTitle').textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
 
-    const dayTitle = document.getElementById('dayTitle');
-    dayTitle.textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
+    const dayPlan = {
+      "monday": [
+        { time: "07:00", task: "🚿 Душ сутрин + Nizoral" },
+        { time: "07:15", task: "💧 Corsodyl (след душ)" },
+        { time: "08:00", task: "🥤 Вода сутрин" },
+        { time: "12:30", task: "🥤 Вода обед" },
+        { time: "18:30", task: "🥤 Вода вечер" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "22:30", task: "😴 Лягам си" }
+      ],
+      "tuesday": [
+        { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
+        { time: "07:15", task: "💧 Corsodyl (след душ)" },
+        { time: "08:00", task: "🥤 Вода сутрин" },
+        { time: "12:30", task: "🥤 Вода обед" },
+        { time: "18:30", task: "🥤 Вода вечер" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "22:30", task: "😴 Лягам си" }
+      ],
+      "wednesday": [
+        { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
+        { time: "06:25", task: "💧 Corsodyl (след душ)" },
+        { time: "07:00", task: "🥤 Вода сутрин" },
+        { time: "12:30", task: "🥤 Вода обед" },
+        { time: "18:30", task: "🥤 Вода вечер" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "22:30", task: "😴 Лягам си" }
+      ],
+      "thursday": [
+        { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
+        { time: "07:15", task: "💧 Corsodyl (след душ)" },
+        { time: "08:00", task: "🥤 Вода сутрин" },
+        { time: "12:30", task: "🥤 Вода обед" },
+        { time: "18:30", task: "🥤 Вода вечер" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "22:30", task: "😴 Лягам си" }
+      ],
+      "friday": [
+        { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
+        { time: "06:25", task: "💧 Corsodyl (след душ)" },
+        { time: "07:00", task: "🥤 Вода сутрин" },
+        { time: "12:30", task: "🥤 Вода обед" },
+        { time: "18:30", task: "🥤 Вода вечер" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "22:30", task: "😴 Лягам си" }
+      ],
+      "saturday": [
+        { time: "08:30", task: "🚿 Душ сутрин + Bioblas Zinc" },
+        { time: "08:45", task: "💧 Corsodyl (след душ)" },
+        { time: "09:00", task: "🥤 Вода сутрин" },
+        { time: "13:00", task: "🥤 Вода обед" },
+        { time: "19:00", task: "🥤 Вода вечер" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "23:00", task: "😴 Лягам си" }
+      ],
+      "sunday": [
+        { time: "08:30", task: "🚿 Душ сутрин + Nizoral" },
+        { time: "08:45", task: "💧 Corsodyl (след душ)" },
+        { time: "09:00", task: "🥤 Вода сутрин" },
+        { time: "13:00", task: "🥤 Вода обед" },
+        { time: "19:00", task: "🥤 Вода вечер" },
+        { time: "20:30", task: "🛏️ Смяна на калъфка и кърпа" },
+        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+        { time: "23:00", task: "😴 Лягам си" }
+      ]
+    };
 
-    const taskList = document.getElementById('taskList');
+    const planBody = document.getElementById('planBody');
+    const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
+    const dateKey = todayDate.toISOString().split('T')[0];
+    if (!logs[dateKey]) logs[dateKey] = {};
 
-    tasksByDay[today].forEach(task => {
-      const li = document.createElement('li');
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.addEventListener('change', updateProgress);
-      li.appendChild(checkbox);
-      const span = document.createElement('span');
-      span.textContent = task;
-      li.appendChild(span);
-      taskList.appendChild(li);
+    (dayPlan[today] || []).forEach(row => {
+      const tr = document.createElement('tr');
+      const tdTime = document.createElement('td');
+      tdTime.textContent = row.time;
+      const tdTask = document.createElement('td');
+      tdTask.textContent = row.task;
+      const tdStatus = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.textContent = logs[dateKey][row.task] ? "✅ " + logs[dateKey][row.task] : "Отметни";
+      btn.onclick = () => {
+        const now = new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
+        logs[dateKey][row.task] = now;
+        localStorage.setItem('dailyLogs', JSON.stringify(logs));
+        btn.textContent = "✅ " + now;
+      };
+      tdStatus.appendChild(btn);
+      tr.appendChild(tdTime);
+      tr.appendChild(tdTask);
+      tr.appendChild(tdStatus);
+      planBody.appendChild(tr);
     });
-
-    function updateProgress() {
-      const checkboxes = document.querySelectorAll('.checklist input');
-      const total = checkboxes.length;
-      const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-      const percent = Math.round((checked / total) * 100);
-      const bar = document.getElementById('progressBar');
-      bar.style.width = percent + '%';
-      bar.textContent = percent + '%';
-    }
 
     function recordSleep(action) {
       const now = new Date();
-      if (action === 'bed') {
-        localStorage.setItem('sleepTime', now);
-        alert('Лягаш си в ' + now.toLocaleTimeString('bg-BG'));
-      } else if (action === 'wake') {
-        const bedTime = new Date(localStorage.getItem('sleepTime'));
-        if (!bedTime) {
-          alert("Няма записан час на лягане.");
-          return;
-        }
-        const diff = now - bedTime;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        alert(`Сънят ти беше ${hours}ч ${minutes}м.`);
-      }
+      if (action === 'bed') logs[dateKey]['Сън - лягане'] = now.toLocaleTimeString('bg-BG');
+      else if (action === 'wake') logs[dateKey]['Сън - ставане'] = now.toLocaleTimeString('bg-BG');
+      localStorage.setItem('dailyLogs', JSON.stringify(logs));
+      alert("Записано!");
+    }
+
+    function showHistory() {
+      let msg = "История последни 7 дни:\n";
+      const keys = Object.keys(logs).slice(-7);
+      keys.forEach(k => { msg += `\n${k}: ${Object.keys(logs[k]).length} задачи изпълнени`; });
+      alert(msg);
     }
   </script>
 </body>
