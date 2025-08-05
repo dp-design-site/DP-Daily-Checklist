@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DP Daily Notes</title> <!-- смених името, за да е по-незабележимо -->
+  <title>DP Daily Notes</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -97,9 +97,21 @@
       "sunday": ["🚿 Душ + Nizoral", "💧 Corsodyl", "🌙 Фуцидин", "🛏️ Смяна на калъфка", "🧴 Смяна на кърпа", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"]
     };
 
-    const today = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
+    const dayMap = {
+      "понеделник": "monday",
+      "вторник": "tuesday",
+      "сряда": "wednesday",
+      "четвъртък": "thursday",
+      "петък": "friday",
+      "събота": "saturday",
+      "неделя": "sunday"
+    };
+
+    const todayBG = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
+    const today = dayMap[todayBG];
+
     const dayTitle = document.getElementById('dayTitle');
-    dayTitle.textContent = today.charAt(0).toUpperCase() + today.slice(1);
+    dayTitle.textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
 
     const taskList = document.getElementById('taskList');
     let completedTasks = 0;
@@ -131,6 +143,10 @@
         alert('Лягаш си в ' + now.toLocaleTimeString('bg-BG'));
       } else if (action === 'wake') {
         const bedTime = new Date(localStorage.getItem('sleepTime'));
+        if (!bedTime) {
+          alert("Няма записан час на лягане.");
+          return;
+        }
         const diff = now - bedTime;
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
