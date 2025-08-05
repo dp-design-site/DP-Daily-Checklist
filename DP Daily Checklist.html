@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DP Daily Notes</title> <!-- смених името, за да е по-незабележимо -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #90caf9;
+    }
+    .progress {
+      width: 100%;
+      background: #333;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .progress-bar {
+      height: 20px;
+      background: #90caf9;
+      width: 0%;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 12px;
+      color: #000;
+    }
+    .checklist {
+      list-style: none;
+      padding: 0;
+    }
+    .checklist li {
+      background: #1e1e1e;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .checklist input {
+      margin-right: 10px;
+    }
+    button {
+      background: #90caf9;
+      border: none;
+      padding: 10px 15px;
+      margin: 10px 5px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #64b5f6;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #9e9e9e;
+    }
+  </style>
+</head>
+<body>
+  <h1>DP Daily Notes</h1>
+  <h2 id="dayTitle"></h2>
+
+  <div class="progress">
+    <div class="progress-bar" id="progressBar">0%</div>
+  </div>
+
+  <ul class="checklist" id="taskList"></ul>
+
+  <div style="text-align:center">
+    <button onclick="recordSleep('bed')">😴 Лягам си</button>
+    <button onclick="recordSleep('wake')">🌅 Ставам</button>
+  </div>
+
+  <div class="footer">
+    DP Design Tools © 2025
+  </div>
+
+  <script>
+    const tasksByDay = {
+      "monday": ["🚿 Душ + Nizoral", "💧 Corsodyl", "🌙 Фуцидин", "🛏️ Смяна на калъфка", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"],
+      "tuesday": ["🚿 Душ + Bioblas Zinc", "💧 Corsodyl", "🌙 Фуцидин", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"],
+      "wednesday": ["🚿 Душ + Nizoral", "💧 Corsodyl", "🌙 Фуцидин", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"],
+      "thursday": ["🚿 Душ + Bioblas Zinc", "💧 Corsodyl", "🌙 Фуцидин", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"],
+      "friday": ["🚿 Душ + Nizoral", "💧 Corsodyl", "🌙 Фуцидин", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "🚶 15 мин разходка", "😴 Сън ≥ 7 часа"],
+      "saturday": ["🚿 Душ + Bioblas Zinc", "💧 Corsodyl", "🌙 Фуцидин", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"],
+      "sunday": ["🚿 Душ + Nizoral", "💧 Corsodyl", "🌙 Фуцидин", "🛏️ Смяна на калъфка", "🧴 Смяна на кърпа", "🥤 Вода сутрин", "🥤 Вода обед", "🥤 Вода вечер", "😴 Сън ≥ 7 часа"]
+    };
+
+    const today = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
+    const dayTitle = document.getElementById('dayTitle');
+    dayTitle.textContent = today.charAt(0).toUpperCase() + today.slice(1);
+
+    const taskList = document.getElementById('taskList');
+    let completedTasks = 0;
+
+    tasksByDay[today].forEach(task => {
+      const li = document.createElement('li');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.addEventListener('change', updateProgress);
+      li.appendChild(checkbox);
+      li.appendChild(document.createTextNode(task));
+      taskList.appendChild(li);
+    });
+
+    function updateProgress() {
+      const checkboxes = document.querySelectorAll('.checklist input');
+      const total = checkboxes.length;
+      const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+      const percent = Math.round((checked / total) * 100);
+      const bar = document.getElementById('progressBar');
+      bar.style.width = percent + '%';
+      bar.textContent = percent + '%';
+    }
+
+    function recordSleep(action) {
+      const now = new Date();
+      if (action === 'bed') {
+        localStorage.setItem('sleepTime', now);
+        alert('Лягаш си в ' + now.toLocaleTimeString('bg-BG'));
+      } else if (action === 'wake') {
+        const bedTime = new Date(localStorage.getItem('sleepTime'));
+        const diff = now - bedTime;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        alert(`Сънят ти беше ${hours}ч ${minutes}м.`);
+      }
+    }
+  </script>
+</body>
+</html>
