@@ -6,15 +6,53 @@
   <title>DP Daily Notes</title>
   <link rel="icon" type="image/png" href="img/DP_fav.png">
   <style>
-    body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
-    h1 { text-align: center; color: #90caf9; }
-    .week-counter { text-align: center; font-size: 16px; margin-bottom: 15px; color: #b0bec5; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #333; padding: 10px; text-align: left; }
-    th { background: #1e1e1e; }
-    button { background: #90caf9; border: none; padding: 8px 12px; margin: 5px; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #64b5f6; }
-    .footer { text-align: center; margin-top: 20px; font-size: 14px; color: #9e9e9e; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #90caf9;
+    }
+    .week-counter {
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #b0bec5;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #1e1e1e;
+    }
+    button {
+      background: #90caf9;
+      border: none;
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #64b5f6;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #9e9e9e;
+    }
   </style>
 </head>
 <body>
@@ -38,21 +76,36 @@
   <div class="footer">DP Design Tools © 2025</div>
 
   <script>
-    if (!localStorage.getItem('startDate')) localStorage.setItem('startDate', new Date());
+    // Седмичен брояч
+    if (!localStorage.getItem('startDate')) {
+      localStorage.setItem('startDate', new Date());
+    }
     const startDate = new Date(localStorage.getItem('startDate'));
     const todayDate = new Date();
     const diffDays = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
     const weekNumber = Math.floor(diffDays / 7) + 1;
     document.getElementById('weekCounter').textContent = `Седмица ${weekNumber} от 4`;
-    if (weekNumber > 4) document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
+    if (weekNumber > 4) {
+      document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
+    }
 
-    const dayMap = { "понеделник": "monday", "вторник": "tuesday", "сряда": "wednesday", "четвъртък": "thursday", "петък": "friday", "събота": "saturday", "неделя": "sunday" };
+    const dayMap = {
+      "понеделник": "monday",
+      "вторник": "tuesday",
+      "сряда": "wednesday",
+      "четвъртък": "thursday",
+      "петък": "friday",
+      "събота": "saturday",
+      "неделя": "sunday"
+    };
+
     const todayBG = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
     const today = dayMap[todayBG];
     document.getElementById('dayTitle').textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
 
+    // План по часове
     const dayPlan = {
-      "monday": [
+       "monday": [
         { time: "07:00", task: "🚿 Душ сутрин + Nizoral" },
         { time: "07:15", task: "💧 Corsodyl (след душ)" },
         { time: "08:00", task: "🥤 Вода сутрин" },
@@ -154,8 +207,11 @@
 
     function recordSleep(action) {
       const now = new Date();
-      if (action === 'bed') logs[dateKey]['Сън - лягане'] = now.toLocaleTimeString('bg-BG');
-      else if (action === 'wake') logs[dateKey]['Сън - ставане'] = now.toLocaleTimeString('bg-BG');
+      if (action === 'bed') {
+        logs[dateKey]['Сън - лягане'] = now.toLocaleTimeString('bg-BG');
+      } else if (action === 'wake') {
+        logs[dateKey]['Сън - ставане'] = now.toLocaleTimeString('bg-BG');
+      }
       localStorage.setItem('dailyLogs', JSON.stringify(logs));
       alert("Записано!");
     }
@@ -163,7 +219,9 @@
     function showHistory() {
       let msg = "История последни 7 дни:\n";
       const keys = Object.keys(logs).slice(-7);
-      keys.forEach(k => { msg += `\n${k}: ${Object.keys(logs[k]).length} задачи изпълнени`; });
+      keys.forEach(k => {
+        msg += `\n${k}: ${Object.keys(logs[k]).length} задачи изпълнени`;
+      });
       alert(msg);
     }
   </script>
