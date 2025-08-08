@@ -51,6 +51,7 @@
   <div class="progress">
     <div class="progress-bar" id="progressBar">0%</div>
   </div>
+
   <h2>Седмичен план</h2>
   <table id="weekPlan">
     <thead>
@@ -58,6 +59,7 @@
     </thead>
     <tbody id="weekPlanBody"></tbody>
   </table>
+
   <h2 id="dayTitle"></h2>
   <table id="dayPlan">
     <thead>
@@ -65,11 +67,15 @@
     </thead>
     <tbody id="planBody"></tbody>
   </table>
+
   <div style="text-align:center">
     <button onclick="showHistory()">📊 История</button>
   </div>
+
   <div class="footer">DP Design Tools © 2025</div>
+
   <script>
+    // ---- Седмичен брояч ----
     if (!localStorage.getItem('startDate')) localStorage.setItem('startDate', new Date());
     const startDate = new Date(localStorage.getItem('startDate'));
     const todayDate = new Date();
@@ -78,14 +84,18 @@
     document.getElementById('weekCounter').textContent = `Седмица ${weekNumber} от 4`;
     if (weekNumber > 4) document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
 
+    // ---- Карти на дните ----
     const dayMap = { "понеделник": "monday", "вторник": "tuesday", "сряда": "wednesday", "четвъртък": "thursday", "петък": "friday", "събота": "saturday", "неделя": "sunday" };
+    const bgByKey = { monday: "Понеделник", tuesday: "Вторник", wednesday: "Сряда", thursday: "Четвъртък", friday: "Петък", saturday: "Събота", sunday: "Неделя" };
+    const order = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+
     const todayBG = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
     const today = dayMap[todayBG];
     document.getElementById('dayTitle').textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
 
-    // План по часове
+    // ---- План по часове ----
     const dayPlan = {
-       "monday": [
+      "monday": [
         { time: "07:00", task: "🚿 Душ сутрин + Nizoral" },
         { time: "07:15", task: "💧 Corsodyl (след душ)" },
         { time: "08:00", task: "🥤 Вода сутрин" },
@@ -157,6 +167,26 @@
         { time: "23:00", task: "😴 Лягам си" }
       ]
     };
+
+    // ---- Попълване на седмичния план ----
+    const weekPlanBody = document.getElementById('weekPlanBody');
+    function toMinutes(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60+m; }
+    order.forEach(dayKey => {
+      const rows = (dayPlan[dayKey] || []).slice().sort((a,b)=> toMinutes(a.time)-toMinutes(b.time));
+      rows.forEach(entry => {
+        const tr = document.createElement('tr');
+        const tdDay = document.createElement('td');
+        tdDay.textContent = bgByKey[dayKey];
+        const tdTime = document.createElement('td');
+        tdTime.textContent = entry.time;
+        const tdTask = document.createElement('td');
+        tdTask.textContent = entry.task;
+        tr.appendChild(tdDay); tr.appendChild(tdTime); tr.appendChild(tdTask);
+        weekPlanBody.appendChild(tr);
+      });
+    });
+
+    // ---- Дневен план + прогрес ----
     const planBody = document.getElementById('planBody');
     const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
     const dateKey = todayDate.toISOString().split('T')[0];
@@ -165,7 +195,7 @@
     function updateProgress() {
       const total = document.querySelectorAll('#planBody button').length;
       const done = Object.keys(logs[dateKey]).length;
-      const percent = Math.round((done / total) * 100);
+      const percent = total ? Math.round((done / total) * 100) : 0;
       const bar = document.getElementById('progressBar');
       bar.style.width = percent + '%';
       bar.textContent = percent + '%';
@@ -193,15 +223,14 @@
         updateProgress();
       };
       tdStatus.appendChild(btn);
-      tr.appendChild(tdTime);
-      tr.appendChild(tdTask);
-      tr.appendChild(tdStatus);
+      tr.appendChild(tdTime); tr.appendChild(tdTask); tr.appendChild(tdStatus);
       planBody.appendChild(tr);
     });
 
     updateProgress();
 
     function showHistory() {
+      const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
       let msg = "История последни 7 дни:\n";
       const keys = Object.keys(logs).slice(-7);
       keys.forEach(k => { msg += `\n${k}: ${Object.keys(logs[k]).length} задачи изпълнени`; });
