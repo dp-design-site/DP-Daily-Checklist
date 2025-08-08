@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DP Daily Notes</title>
   <link rel="icon" type="image/png" href="img/DP_fav.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121212">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="DP Daily">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="img/DP_fav.png">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -41,28 +48,27 @@
 <body>
   <h1>DP Daily Notes</h1>
   <div class="week-counter" id="weekCounter"></div>
-
   <div class="progress">
     <div class="progress-bar" id="progressBar">0%</div>
   </div>
-
+  <h2>Седмичен план</h2>
+  <table id="weekPlan">
+    <thead>
+      <tr><th>Ден</th><th>Час</th><th>Задача</th></tr>
+    </thead>
+    <tbody id="weekPlanBody"></tbody>
+  </table>
   <h2 id="dayTitle"></h2>
-
   <table id="dayPlan">
     <thead>
       <tr><th>Час</th><th>Задача</th><th>Статус</th></tr>
     </thead>
     <tbody id="planBody"></tbody>
   </table>
-
   <div style="text-align:center">
-    <button onclick="recordSleep('bed')">😴 Лягам си</button>
-    <button onclick="recordSleep('wake')">🌅 Ставам</button>
     <button onclick="showHistory()">📊 История</button>
   </div>
-
   <div class="footer">DP Design Tools © 2025</div>
-
   <script>
     if (!localStorage.getItem('startDate')) localStorage.setItem('startDate', new Date());
     const startDate = new Date(localStorage.getItem('startDate'));
@@ -77,81 +83,7 @@
     const today = dayMap[todayBG];
     document.getElementById('dayTitle').textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
 
-     // План по часове
-    const dayPlan = {
-       "monday": [
-        { time: "07:00", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "07:15", task: "💧 Corsodyl (след душ)" },
-        { time: "08:00", task: "🥤 Вода сутрин" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "tuesday": [
-        { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
-        { time: "07:15", task: "💧 Corsodyl (след душ)" },
-        { time: "08:00", task: "🥤 Вода сутрин" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "wednesday": [
-        { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "06:25", task: "💧 Corsodyl (след душ)" },
-        { time: "07:00", task: "🥤 Вода сутрин" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "thursday": [
-        { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
-        { time: "07:15", task: "💧 Corsodyl (след душ)" },
-        { time: "08:00", task: "🥤 Вода сутрин" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "friday": [
-        { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "06:25", task: "💧 Corsodyl (след душ)" },
-        { time: "07:00", task: "🥤 Вода сутрин" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "saturday": [
-        { time: "08:30", task: "🚿 Душ сутрин + Bioblas Zinc" },
-        { time: "08:45", task: "💧 Corsodyl (след душ)" },
-        { time: "09:00", task: "🥤 Вода сутрин" },
-        { time: "13:00", task: "🥤 Вода обед" },
-        { time: "19:00", task: "🥤 Вода вечер" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "23:00", task: "😴 Лягам си" }
-      ],
-      "sunday": [
-        { time: "08:30", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "08:45", task: "💧 Corsodyl (след душ)" },
-        { time: "09:00", task: "🥤 Вода сутрин" },
-        { time: "13:00", task: "🥤 Вода обед" },
-        { time: "19:00", task: "🥤 Вода вечер" },
-        { time: "20:30", task: "🛏️ Смяна на калъфка и кърпа" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "23:00", task: "😴 Лягам си" }
-      ]
-    };
-
+    const dayPlan = {};
     const planBody = document.getElementById('planBody');
     const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
     const dateKey = todayDate.toISOString().split('T')[0];
@@ -195,15 +127,6 @@
     });
 
     updateProgress();
-
-    function recordSleep(action) {
-      const now = new Date();
-      if (action === 'bed') logs[dateKey]['Сън - лягане'] = now.toLocaleTimeString('bg-BG');
-      else if (action === 'wake') logs[dateKey]['Сън - ставане'] = now.toLocaleTimeString('bg-BG');
-      localStorage.setItem('dailyLogs', JSON.stringify(logs));
-      updateProgress();
-      alert("Записано!");
-    }
 
     function showHistory() {
       let msg = "История последни 7 дни:\n";
