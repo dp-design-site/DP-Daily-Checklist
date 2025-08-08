@@ -13,52 +13,53 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="img/DP_fav.png">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: #e0e0e0;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 { text-align: center; color: #90caf9; }
-    .week-counter { text-align: center; font-size: 16px; margin-bottom: 15px; color: #b0bec5; }
-    .progress {
-      width: 100%;
-      background: #333;
-      border-radius: 10px;
-      margin: 20px 0;
-    }
-    .progress-bar {
-      height: 20px;
-      background: #90caf9;
-      width: 0%;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 12px;
-      color: #000;
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #333; padding: 10px; text-align: left; }
-    th { background: #1e1e1e; }
-    button { background: #90caf9; border: none; padding: 8px 12px; margin: 5px; border-radius: 6px; cursor: pointer; }
-    button:hover { background: #64b5f6; }
-    .footer { text-align: center; margin-top: 20px; font-size: 14px; color: #9e9e9e; }
+    :root { --bg:#121212; --fg:#e0e0e0; --card:#1e1e1e; --muted:#9e9e9e; --accent:#90caf9; --border:#333; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background-color: var(--bg); color: var(--fg); margin: 0; padding: 20px; }
+    h1 { text-align: center; color: var(--accent); margin: 0 0 8px; }
+    .week-counter { text-align: center; font-size: 16px; margin-bottom: 10px; color: #b0bec5; }
+    .toolbar { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin: 12px 0; }
+    .progress { width: 100%; background: var(--border); border-radius: 10px; margin: 12px 0 16px; overflow:hidden; }
+    .progress-bar { height: 20px; background: var(--accent); width: 0%; border-radius: 10px; text-align: center; font-size: 12px; color: #000; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+    th { background: var(--card); }
+    button { background: var(--accent); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; color:#062234; font-weight:600; }
+    button.secondary { background:#2a2a2a; color: var(--fg); border:1px solid var(--border); }
+    button:hover { filter: brightness(1.05); }
+    .footer { text-align: center; margin-top: 20px; font-size: 14px; color: var(--muted); }
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display:none; align-items: center; justify-content: center; padding:16px; }
+    .modal { width: 100%; max-width: 560px; background: var(--card); border:1px solid var(--border); border-radius: 12px; padding:16px; }
+    .modal h3 { margin:0 0 8px; }
+    .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .days { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:6px; margin: 8px 0 12px; }
+    .days label { background:#2a2a2a; border:1px solid var(--border); border-radius:8px; padding:6px 8px; display:flex; align-items:center; gap:6px; }
+    .checklist { list-style:none; margin:8px 0 0; padding:0; max-height: 40vh; overflow:auto; }
+    .checklist li { display:flex; gap:8px; align-items:center; border-bottom:1px dashed var(--border); padding:6px 4px; }
+    .hidden { display:none; }
   </style>
 </head>
 <body>
   <h1>DP Daily Notes</h1>
   <div class="week-counter" id="weekCounter"></div>
-  <div class="progress">
-    <div class="progress-bar" id="progressBar">0%</div>
+  <div class="progress"><div class="progress-bar" id="progressBar">0%</div></div>
+
+  <div class="toolbar">
+    <button id="toggleWeekBtn" class="secondary">🗓 Седмица</button>
+    <button id="travelBtn">📦 Пътувам</button>
+    <button class="secondary" onclick="showHistory()">📊 История</button>
   </div>
 
-  <h2>Седмичен план</h2>
-  <table id="weekPlan">
-    <thead>
-      <tr><th>Ден</th><th>Час</th><th>Задача</th></tr>
-    </thead>
-    <tbody id="weekPlanBody"></tbody>
-  </table>
+  <section id="weekSection" class="hidden">
+    <h2>Седмичен план</h2>
+    <table id="weekPlan">
+      <thead>
+        <tr><th>Ден</th><th>Час</th><th>Задача</th></tr>
+      </thead>
+      <tbody id="weekPlanBody"></tbody>
+    </table>
+  </section>
 
   <h2 id="dayTitle"></h2>
   <table id="dayPlan">
@@ -68,8 +69,22 @@
     <tbody id="planBody"></tbody>
   </table>
 
-  <div style="text-align:center">
-    <button onclick="showHistory()">📊 История</button>
+  <!-- Travel Modal -->
+  <div id="travelBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between">
+        <h3>📦 Списък за пътуване</h3>
+        <button class="secondary" onclick="closeTravel()">✖</button>
+      </div>
+      <p class="muted">Избери в кои дни ще пътуваш и генерирай чеклист с необходимите неща.</p>
+      <div class="days" id="travelDays"></div>
+      <div class="row">
+        <button onclick="generatePacking()">Генерирай списък</button>
+        <button class="secondary" onclick="copyPacking()">Копирай</button>
+        <button class="secondary" onclick="window.print()">Печат</button>
+      </div>
+      <ul id="packingList" class="checklist"></ul>
+    </div>
   </div>
 
   <div class="footer">DP Design Tools © 2025</div>
@@ -171,20 +186,20 @@
     // ---- Попълване на седмичния план ----
     const weekPlanBody = document.getElementById('weekPlanBody');
     function toMinutes(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60+m; }
-    order.forEach(dayKey => {
-      const rows = (dayPlan[dayKey] || []).slice().sort((a,b)=> toMinutes(a.time)-toMinutes(b.time));
-      rows.forEach(entry => {
-        const tr = document.createElement('tr');
-        const tdDay = document.createElement('td');
-        tdDay.textContent = bgByKey[dayKey];
-        const tdTime = document.createElement('td');
-        tdTime.textContent = entry.time;
-        const tdTask = document.createElement('td');
-        tdTask.textContent = entry.task;
-        tr.appendChild(tdDay); tr.appendChild(tdTime); tr.appendChild(tdTask);
-        weekPlanBody.appendChild(tr);
+    function renderWeek(){
+      weekPlanBody.innerHTML = '';
+      order.forEach(dayKey => {
+        const rows = (dayPlan[dayKey] || []).slice().sort((a,b)=> toMinutes(a.time)-toMinutes(b.time));
+        rows.forEach(entry => {
+          const tr = document.createElement('tr');
+          const tdDay = document.createElement('td'); tdDay.textContent = bgByKey[dayKey];
+          const tdTime = document.createElement('td'); tdTime.textContent = entry.time;
+          const tdTask = document.createElement('td'); tdTask.textContent = entry.task;
+          tr.appendChild(tdDay); tr.appendChild(tdTime); tr.appendChild(tdTask);
+          weekPlanBody.appendChild(tr);
+        });
       });
-    });
+    }
 
     // ---- Дневен план + прогрес ----
     const planBody = document.getElementById('planBody');
@@ -201,33 +216,90 @@
       bar.textContent = percent + '%';
     }
 
-    (dayPlan[today] || []).forEach(row => {
-      const tr = document.createElement('tr');
-      const tdTime = document.createElement('td');
-      tdTime.textContent = row.time;
-      const tdTask = document.createElement('td');
-      tdTask.textContent = row.task;
-      const tdStatus = document.createElement('td');
-      const btn = document.createElement('button');
-      btn.textContent = logs[dateKey][row.task] ? "✅ " + logs[dateKey][row.task] : "Отметни";
-      btn.onclick = () => {
-        if (logs[dateKey][row.task]) {
-          delete logs[dateKey][row.task];
-          btn.textContent = "Отметни";
-        } else {
-          const now = new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' });
-          logs[dateKey][row.task] = now;
-          btn.textContent = "✅ " + now;
-        }
-        localStorage.setItem('dailyLogs', JSON.stringify(logs));
-        updateProgress();
-      };
-      tdStatus.appendChild(btn);
-      tr.appendChild(tdTime); tr.appendChild(tdTask); tr.appendChild(tdStatus);
-      planBody.appendChild(tr);
+    function renderDay(){
+      planBody.innerHTML = '';
+      (dayPlan[today] || []).forEach(row => {
+        const tr = document.createElement('tr');
+        const tdTime = document.createElement('td'); tdTime.textContent = row.time;
+        const tdTask = document.createElement('td'); tdTask.textContent = row.task;
+        const tdStatus = document.createElement('td');
+        const btn = document.createElement('button');
+        btn.textContent = logs[dateKey][row.task] ? "✅ " + logs[dateKey][row.task] : "Отметни";
+        btn.onclick = () => {
+          if (logs[dateKey][row.task]) { delete logs[dateKey][row.task]; btn.textContent = "Отметни"; }
+          else { const now = new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' }); logs[dateKey][row.task] = now; btn.textContent = "✅ " + now; }
+          localStorage.setItem('dailyLogs', JSON.stringify(logs));
+          updateProgress();
+        };
+        tdStatus.appendChild(btn);
+        tr.appendChild(tdTime); tr.appendChild(tdTask); tr.appendChild(tdStatus);
+        planBody.appendChild(tr);
+      });
+      updateProgress();
+    }
+
+    // ---- Toggle Week Section ----
+    const weekSection = document.getElementById('weekSection');
+    document.getElementById('toggleWeekBtn').addEventListener('click', () => {
+      const show = weekSection.classList.toggle('hidden');
+      if (!show) { // just opened
+        renderWeek();
+      }
     });
 
-    updateProgress();
+    // ---- Travel Modal ----
+    const travelBackdrop = document.getElementById('travelBackdrop');
+    const travelDays = document.getElementById('travelDays');
+    const packingListEl = document.getElementById('packingList');
+    document.getElementById('travelBtn').addEventListener('click', openTravel);
+
+    function openTravel(){
+      // build day checkboxes
+      travelDays.innerHTML = '';
+      order.forEach(k => {
+        const id = `day-${k}`;
+        const label = document.createElement('label');
+        const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.value=k;
+        const span = document.createElement('span'); span.textContent = bgByKey[k];
+        label.appendChild(cb); label.appendChild(span); travelDays.appendChild(label);
+      });
+      packingListEl.innerHTML = '';
+      travelBackdrop.style.display = 'flex';
+    }
+    function closeTravel(){ travelBackdrop.style.display = 'none'; }
+
+    function generatePacking(){
+      const selected = Array.from(travelDays.querySelectorAll('input:checked')).map(cb=>cb.value);
+      const items = new Set();
+      // base hygiene always useful
+      if (selected.length) items.add('Лична кърпа');
+      selected.forEach(dayKey => {
+        (dayPlan[dayKey]||[]).forEach(({task})=>{
+          if (/Nizoral/i.test(task)) items.add('Nizoral 2% шампоан');
+          if (/Bioblas/i.test(task) || /Zinc/i.test(task)) items.add('Шампоан с цинков пиритион');
+          if (/Corsodyl/i.test(task) || /хлорхексидин/i.test(task)) { items.add('Хлорхексидин разтвор'); items.add('Марли/тампони'); }
+          if (/Фуцидин/i.test(task)) items.add('Фуцидин крем');
+          if (/калъфка/i.test(task)) items.add('Резервна калъфка');
+          if (/кърпа/i.test(task)) items.add('Допълнителна кърпа за лице/брада');
+          if (/Вода/i.test(task)) items.add('Бутилка вода 0.5L');
+        });
+      });
+      // Render checklist
+      packingListEl.innerHTML = '';
+      if (!items.size) { packingListEl.innerHTML = '<li><em>Няма задачи в избраните дни.</em></li>'; return; }
+      items.forEach(txt => {
+        const li = document.createElement('li');
+        const cb = document.createElement('input'); cb.type='checkbox';
+        const span = document.createElement('span'); span.textContent = txt;
+        li.appendChild(cb); li.appendChild(span); packingListEl.appendChild(li);
+      });
+    }
+
+    async function copyPacking(){
+      const lines = Array.from(packingListEl.querySelectorAll('li span')).map(s=>`- [ ] ${s.textContent}`);
+      try { await navigator.clipboard.writeText(lines.join('\n')); alert('Списъкът е копиран.'); }
+      catch(e){ alert('Копирането не беше позволено от браузъра.'); }
+    }
 
     function showHistory() {
       const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
@@ -236,6 +308,9 @@
       keys.forEach(k => { msg += `\n${k}: ${Object.keys(logs[k]).length} задачи изпълнени`; });
       alert(msg);
     }
+
+    // ---- Initial render ----
+    renderDay();
   </script>
 </body>
 </html>
