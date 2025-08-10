@@ -375,8 +375,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     async function copyPacking(){
       var lines = Array.from(packingListEl.querySelectorAll('li span')).map(function(s){ return '- [ ] ' + s.textContent; });
-      try { await navigator.clipboard.writeText(lines.join('
-')); alert('Списъкът е копиран.'); }
+      try { await navigator.clipboard.writeText(lines.join(''); alert('Списъкът е копиран.'); }
       catch(e){ alert('Копирането не беше позволено от браузъра.'); }
     }
 
