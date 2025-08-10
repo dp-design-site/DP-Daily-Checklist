@@ -402,9 +402,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // ---- Ресет прогрес ----
     function resetProgress(){
-      var text = 'Това действие ще рестартира целия цикъл и ще загубите прогреса до момента. Сигурни ли сте, че искате да го направите?
-
-Въведете YES за потвърждение или NO за отказ.';
+      var text = 'Това действие ще рестартира целия цикъл и ще загубите прогреса до момента. Сигурни ли сте, че искате да го направите? Въведете YES за потвърждение или NO за отказ.';
       var ans = prompt(text, 'NO');
       if (!ans) return;
       var val = String(ans).trim().toLowerCase();
