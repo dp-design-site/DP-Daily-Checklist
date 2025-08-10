@@ -390,8 +390,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     function showHistory(){
     var logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
-    var msg = 'История последни 7 дни:
-';
+    var msg = 'История последни 7 дни:';
     var keys = Object.keys(logs).slice(-7);
     keys.forEach(function(k){
       msg += '
