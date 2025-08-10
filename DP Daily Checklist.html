@@ -374,20 +374,27 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
     async function copyPacking(){
-      var lines = Array.from(packingListEl.querySelectorAll('li span')).map(function(s){ return '- [ ] ' + s.textContent; });
-      try { await navigator.clipboard.writeText(lines.join(''); alert('Списъкът е копиран.'); }
-      catch(e){ alert('Копирането не беше позволено от браузъра.'); }
+      var lines = Array.from(packingListEl.querySelectorAll('li span'))
+        .map(function(s){ return '- [ ] ' + s.textContent; });
+      try {
+        await navigator.clipboard.writeText(lines.join('\n'));
+        alert('Списъкът е копиран.');
+      } catch(e) {
+        alert('Копирането не беше позволено от браузъра.');
+      }
     }
 
+
     function showHistory(){
-      var logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
-      var msg = 'История последни 7 дни:
-';
-      var keys = Object.keys(logs).slice(-7);
-      keys.forEach(function(k){ msg += '
-' + k + ': ' + Object.keys(logs[k]).length + ' задачи изпълнени'; });
-      alert(msg);
-    }
+    var logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
+    var msg = 'История последни 7 дни:\n';
+    var keys = Object.keys(logs).slice(-7);
+    keys.forEach(function(k){
+      msg += '\n' + k + ': ' + Object.keys(logs[k]).length + ' задачи изпълнени';
+    });
+    alert(msg);
+  }
+
 
     // ---- План модал ----
     function openPlan(){ document.getElementById('planBackdrop').style.display = 'flex'; }
