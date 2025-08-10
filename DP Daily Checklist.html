@@ -393,8 +393,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var msg = 'История последни 7 дни:';
     var keys = Object.keys(logs).slice(-7);
     keys.forEach(function(k){
-      msg += '
-' + k + ': ' + Object.keys(logs[k]).length + ' задачи изпълнени';
+      msg += '' + k + ': ' + Object.keys(logs[k]).length + ' задачи изпълнени';
     });
     alert(msg);
   }
