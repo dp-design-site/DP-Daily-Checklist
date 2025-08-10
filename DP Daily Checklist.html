@@ -134,9 +134,12 @@
     const bgByKey = { monday: "Понеделник", tuesday: "Вторник", wednesday: "Сряда", thursday: "Четвъртък", friday: "Петък", saturday: "Събота", sunday: "Неделя" };
     const order = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
 
-    const todayBG = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
-    const today = dayMap[todayBG];
-    document.getElementById('dayTitle').textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
+    const now = new Date();
+    const todayBG = now.toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase().trim();
+    const fallbackByIndex = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    let today = dayMap[todayBG] || fallbackByIndex[now.getDay()] || 'monday';
+    const todayTitleBG = Object.keys(dayMap).find(k => dayMap[k] === today) || todayBG;
+    document.getElementById('dayTitle').textContent = todayTitleBG.charAt(0).toUpperCase() + todayTitleBG.slice(1);
 
     // ---- План по часове ----
     const dayPlan = {
