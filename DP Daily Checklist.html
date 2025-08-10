@@ -87,7 +87,6 @@
       </div>
       <ul id="packingList" class="checklist"></ul>
     </div>
-      </div>
   </div>
 
   <!-- Plan Modal -->
@@ -328,6 +327,10 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('planBtn').addEventListener('click', openPlan);
     document.getElementById('resetBtn').addEventListener('click', resetProgress);
 
+    // close modals on backdrop click
+    document.getElementById('planBackdrop').addEventListener('click', function(e){ if (e.target.id === 'planBackdrop') closePlan(); });
+    document.getElementById('travelBackdrop').addEventListener('click', function(e){ if (e.target.id === 'travelBackdrop') closeTravel(); });
+
     function openTravel(){
       travelDays.innerHTML = '';
       order.forEach(function(k){
@@ -387,18 +390,24 @@ document.addEventListener('DOMContentLoaded', function(){
 
     function showHistory(){
     var logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
-    var msg = 'История последни 7 дни:\n';
+    var msg = 'История последни 7 дни:
+';
     var keys = Object.keys(logs).slice(-7);
     keys.forEach(function(k){
-      msg += '\n' + k + ': ' + Object.keys(logs[k]).length + ' задачи изпълнени';
+      msg += '
+' + k + ': ' + Object.keys(logs[k]).length + ' задачи изпълнени';
     });
     alert(msg);
   }
+  // expose for toolbar inline onclick
+  window.showHistory = showHistory;
 
 
     // ---- План модал ----
     function openPlan(){ document.getElementById('planBackdrop').style.display = 'flex'; }
     function closePlan(){ document.getElementById('planBackdrop').style.display = 'none'; }
+    // expose for inline onclick
+    window.closePlan = closePlan;
 
     // ---- Ресет прогрес ----
     function resetProgress(){
@@ -423,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.generatePacking = generatePacking;
     window.copyPacking = copyPacking;
     window.closeTravel = closeTravel;
-
+ 
   } catch(err){
     alert('Грешка при инициализация: ' + err.message);
   }
