@@ -45,9 +45,11 @@
   <div class="week-counter" id="weekCounter"></div>
   <div class="progress"><div class="progress-bar" id="progressBar">0%</div></div>
 
-  <div class="toolbar">
+    <div class="toolbar">
     <button id="toggleWeekBtn" class="secondary">🗓 Седмица</button>
     <button id="travelBtn">📦 Пътувам</button>
+    <button id="planBtn" class="secondary">📘 План / Обяснения</button>
+    <button id="resetBtn" class="secondary">♻️ Ресет прогрес</button>
     <button class="secondary" onclick="showHistory()">📊 История</button>
   </div>
 
@@ -87,265 +89,340 @@
     </div>
   </div>
 
+  <!-- Plan Modal -->
+  <div id="planBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between">
+        <h3>📘 План / Обяснения</h3>
+        <button class="secondary" onclick="closePlan()">✖</button>
+      </div>
+      <div id="planContent" style="max-height:50vh; overflow:auto; line-height:1.4">
+        <h4>Шампоани</h4>
+        <p><strong>Nizoral (кетоконазол 2%)</strong> – противогъбичен; намалява Malassezia и възпалението на фоликулите. Ползваме го през ден/редуване, за да избегнем изсушаване и да поддържаме противогъбичен ефект.</p>
+        <p><strong>Bioblas Zinc / цинков пиритион</strong> – противовъзпалително и антимикробно към скалпа; редуването с Nizoral дава широк спектър без да натоварва кожата всеки ден с един и същи активен агент.</p>
+        <h4>Антисептика</h4>
+        <p><strong>Хлорхексидин (Corsodyl)</strong> – локална антисептика след душ за зоната на брадата и скалпа; цел: да намалим бактериалното натоварване след подстригване/машинка и да ограничим фоликулита.</p>
+        <h4>Локален антибиотик</h4>
+        <p><strong>Фуцидин (фузидиева киселина)</strong> – само върху големи/болезнени пъпки вечер в тънък слой за 5–7 дни, за да избегнем системни антибиотици.</p>
+        <h4>Добавки</h4>
+        <p><strong>Витамин D3 + K2</strong> – D3 модулира имунитета и възпалението; K2 насочва калция към костите и намалява риска от калцификации при по-високи дози D3.</p>
+        <p><strong>Омега‑3</strong> – противовъзпалителен ефект (EPA/DHA), подкрепя кожната бариера и допринася за по-добър контрол на себума.</p>
+        <p><strong>Витамин C</strong> – антиоксидантна и имунна подкрепа, подпомага възстановяването на тъканите.</p>
+        <p><strong>Магнезий (глицинат)</strong> – участва в активацията на витамин D; вечер подобрява съня и редуцира стреса.</p>
+        <p><strong>Цинк</strong> – важен за имунитета и кожата; да не се комбинира непосредствено с богати на калций храни (млечни) за по-добро усвояване.</p>
+        <h4>Хигиена и текстил</h4>
+        <p>Редовна смяна на калъфка/кърпа (особено в неделя вечер) за намаляване на бактериалния товар и повторното самозаразяване.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="footer">DP Design Tools © 2025</div>
 
   <script>
-    // ---- Седмичен брояч ----
-    if (!localStorage.getItem('startDate')) localStorage.setItem('startDate', new Date());
-    const startDate = new Date(localStorage.getItem('startDate'));
-    const todayDate = new Date();
-    const diffDays = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
-    const weekNumber = Math.floor(diffDays / 7) + 1;
-    document.getElementById('weekCounter').textContent = `Седмица ${weekNumber} от 4`;
-    if (weekNumber > 4) document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
+  // Safe boot: show JS errors visibly
+  window.addEventListener('error', (e)=>{
+    console.warn('JS error:', e.message);
+  });
 
-    // ---- Карти на дните ----
-    const dayMap = { "понеделник": "monday", "вторник": "tuesday", "сряда": "wednesday", "четвъртък": "thursday", "петък": "friday", "събота": "saturday", "неделя": "sunday" };
-    const bgByKey = { monday: "Понеделник", tuesday: "Вторник", wednesday: "Сряда", thursday: "Четвъртък", friday: "Петък", saturday: "Събота", sunday: "Неделя" };
-    const order = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      // ---- Седмичен брояч ----
+      if (!localStorage.getItem('startDate')) localStorage.setItem('startDate', new Date());
+      const startDate = new Date(localStorage.getItem('startDate'));
+      const todayDate = new Date();
+      const diffDays = Math.floor((todayDate - startDate) / (1000 * 60 * 60 * 24));
+      const weekNumber = Math.floor(diffDays / 7) + 1;
+      document.getElementById('weekCounter').textContent = `Седмица ${weekNumber} от 4`;
+      if (weekNumber > 4) document.getElementById('weekCounter').textContent += " — Първият цикъл завърши! Време е за нов режим.";
 
-    const todayBG = new Date().toLocaleDateString('bg-BG', { weekday: 'long' }).toLowerCase();
-    const today = dayMap[todayBG];
-    document.getElementById('dayTitle').textContent = todayBG.charAt(0).toUpperCase() + todayBG.slice(1);
+      // ---- Карти на дните ----
+      const dayMap = { "понеделник": "monday", "вторник": "tuesday", "сряда": "wednesday", "четвъртък": "thursday", "петък": "friday", "събота": "saturday", "неделя": "sunday" };
+      const bgByKey = { monday: "Понеделник", tuesday: "Вторник", wednesday: "Сряда", thursday: "Четвъртък", friday: "Петък", saturday: "Събота", sunday: "Неделя" };
+      const order = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
 
-    // ---- План по часове ----
-    const dayPlan = {
-      "monday": [
-        { time: "07:00", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "07:15", task: "💧 Corsodyl (след душ)" },
-        { time: "08:00", task: "🥤 Вода сутрин" },
-        { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "08:35", task: "🐟 Омега-3" },
-        { time: "08:40", task: "🍊 Витамин C" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "tuesday": [
-        { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
-        { time: "07:15", task: "💧 Corsodyl (след душ)" },
-        { time: "08:00", task: "🥤 Вода сутрин" },
-        { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "08:35", task: "🐟 Омега-3" },
-        { time: "08:40", task: "🍊 Витамин C" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "wednesday": [
-        { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "06:25", task: "💧 Corsodyl (след душ)" },
-        { time: "07:00", task: "🥤 Вода сутрин" },
-        { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "08:35", task: "🐟 Омега-3" },
-        { time: "08:40", task: "🍊 Витамин C" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "thursday": [
-        { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
-        { time: "07:15", task: "💧 Corsodyl (след душ)" },
-        { time: "08:00", task: "🥤 Вода сутрин" },
-        { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "08:35", task: "🐟 Омега-3" },
-        { time: "08:40", task: "🍊 Витамин C" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "friday": [
-        { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "06:25", task: "💧 Corsodyl (след душ)" },
-        { time: "07:00", task: "🥤 Вода сутрин" },
-        { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "08:35", task: "🐟 Омега-3" },
-        { time: "08:40", task: "🍊 Витамин C" },
-        { time: "12:30", task: "🥤 Вода обед" },
-        { time: "18:30", task: "🥤 Вода вечер" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "22:30", task: "😴 Лягам си" }
-      ],
-      "saturday": [
-        { time: "08:30", task: "🚿 Душ сутрин + Bioblas Zinc" },
-        { time: "08:45", task: "💧 Corsodyl (след душ)" },
-        { time: "09:00", task: "🥤 Вода сутрин" },
-        { time: "09:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "09:35", task: "🐟 Омега-3" },
-        { time: "09:40", task: "🍊 Витамин C" },
-        { time: "13:00", task: "🥤 Вода обед" },
-        { time: "19:00", task: "🥤 Вода вечер" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "23:00", task: "😴 Лягам си" }
-      ],
-      "sunday": [
-        { time: "08:30", task: "🚿 Душ сутрин + Nizoral" },
-        { time: "08:45", task: "💧 Corsodyl (след душ)" },
-        { time: "09:00", task: "🥤 Вода сутрин" },
-        { time: "09:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
-        { time: "09:35", task: "🐟 Омега-3" },
-        { time: "09:40", task: "🍊 Витамин C" },
-        { time: "13:00", task: "🥤 Вода обед" },
-        { time: "19:00", task: "🥤 Вода вечер" },
-        { time: "20:30", task: "🛏️ Смяна на калъфка и кърпа" },
-        { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
-        { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
-        { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
-        { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
-        { time: "23:00", task: "😴 Лягам си" }
-      ]
-    };
+      const now = new Date();
+      const todayBGraw = now.toLocaleDateString('bg-BG', { weekday: 'long' });
+      const todayBG = (todayBGraw || '').toLowerCase().trim();
+      const fallbackByIndex = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+      let today = dayMap[todayBG] || fallbackByIndex[now.getDay()] || 'monday';
+      const todayTitleBG = bgByKey[today] || 'Днес';
+      document.getElementById('dayTitle').textContent = todayTitleBG;
 
-    // ---- Попълване на седмичния план ----
-    const weekPlanBody = document.getElementById('weekPlanBody');
-    function toMinutes(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60+m; }
-    function renderWeek(){
-      weekPlanBody.innerHTML = '';
-      order.forEach(dayKey => {
-        const rows = (dayPlan[dayKey] || []).slice().sort((a,b)=> toMinutes(a.time)-toMinutes(b.time));
-        rows.forEach(entry => {
-          const tr = document.createElement('tr');
-          const tdDay = document.createElement('td'); tdDay.textContent = bgByKey[dayKey];
-          const tdTime = document.createElement('td'); tdTime.textContent = entry.time;
-          const tdTask = document.createElement('td'); tdTask.textContent = entry.task;
-          tr.appendChild(tdDay); tr.appendChild(tdTime); tr.appendChild(tdTask);
-          weekPlanBody.appendChild(tr);
+      // ---- План по часове ----
+      const dayPlan = {
+        "monday": [
+          { time: "07:00", task: "🚿 Душ сутрин + Nizoral" },
+          { time: "07:15", task: "💧 Corsodyl (след душ)" },
+          { time: "08:00", task: "🥤 Вода сутрин" },
+          { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "08:35", task: "🐟 Омега-3" },
+          { time: "08:40", task: "🍊 Витамин C" },
+          { time: "12:30", task: "🥤 Вода обед" },
+          { time: "18:30", task: "🥤 Вода вечер" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "22:30", task: "😴 Лягам си" }
+        ],
+        "tuesday": [
+          { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
+          { time: "07:15", task: "💧 Corsodyl (след душ)" },
+          { time: "08:00", task: "🥤 Вода сутрин" },
+          { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "08:35", task: "🐟 Омега-3" },
+          { time: "08:40", task: "🍊 Витамин C" },
+          { time: "12:30", task: "🥤 Вода обед" },
+          { time: "18:30", task: "🥤 Вода вечер" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "22:30", task: "😴 Лягам си" }
+        ],
+        "wednesday": [
+          { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
+          { time: "06:25", task: "💧 Corsodyl (след душ)" },
+          { time: "07:00", task: "🥤 Вода сутрин" },
+          { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "08:35", task: "🐟 Омега-3" },
+          { time: "08:40", task: "🍊 Витамин C" },
+          { time: "12:30", task: "🥤 Вода обед" },
+          { time: "18:30", task: "🥤 Вода вечер" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "22:30", task: "😴 Лягам си" }
+        ],
+        "thursday": [
+          { time: "07:00", task: "🚿 Душ сутрин + Bioblas Zinc" },
+          { time: "07:15", task: "💧 Corsodyl (след душ)" },
+          { time: "08:00", task: "🥤 Вода сутрин" },
+          { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "08:35", task: "🐟 Омега-3" },
+          { time: "08:40", task: "🍊 Витамин C" },
+          { time: "12:30", task: "🥤 Вода обед" },
+          { time: "18:30", task: "🥤 Вода вечер" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "22:30", task: "😴 Лягам си" }
+        ],
+        "friday": [
+          { time: "06:10", task: "🚿 Душ сутрин + Nizoral" },
+          { time: "06:25", task: "💧 Corsodyl (след душ)" },
+          { time: "07:00", task: "🥤 Вода сутрин" },
+          { time: "08:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "08:35", task: "🐟 Омега-3" },
+          { time: "08:40", task: "🍊 Витамин C" },
+          { time: "12:30", task: "🥤 Вода обед" },
+          { time: "18:30", task: "🥤 Вода вечер" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "22:30", task: "😴 Лягам си" }
+        ],
+        "saturday": [
+          { time: "08:30", task: "🚿 Душ сутрин + Bioblas Zinc" },
+          { time: "08:45", task: "💧 Corsodyl (след душ)" },
+          { time: "09:00", task: "🥤 Вода сутрин" },
+          { time: "09:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "09:35", task: "🐟 Омега-3" },
+          { time: "09:40", task: "🍊 Витамин C" },
+          { time: "13:00", task: "🥤 Вода обед" },
+          { time: "19:00", task: "🥤 Вода вечер" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "23:00", task: "😴 Лягам си" }
+        ],
+        "sunday": [
+          { time: "08:30", task: "🚿 Душ сутрин + Nizoral" },
+          { time: "08:45", task: "💧 Corsodyl (след душ)" },
+          { time: "09:00", task: "🥤 Вода сутрин" },
+          { time: "09:30", task: "💊 Витамин D3 (10 000 IU) + K2 (100 mcg) – с мазни храни" },
+          { time: "09:35", task: "🐟 Омега-3" },
+          { time: "09:40", task: "🍊 Витамин C" },
+          { time: "13:00", task: "🥤 Вода обед" },
+          { time: "19:00", task: "🥤 Вода вечер" },
+          { time: "20:30", task: "🛏️ Смяна на калъфка и кърпа" },
+          { time: "21:00", task: "💊 Магнезиев глицинат (200–400 mg)" },
+          { time: "21:05", task: "🛡 Цинк (15–25 mg, без млечни до 1 ч.)" },
+          { time: "21:30", task: "🌙 Фуцидин (само върху големи пъпки)" },
+          { time: "22:00", task: "🚿 Душ вечер + Bioblas Zinc" },
+          { time: "23:00", task: "😴 Лягам си" }
+        ]
+      };
+
+      // ---- Попълване на седмичния план ----
+      const weekPlanBody = document.getElementById('weekPlanBody');
+      function toMinutes(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60+m; }
+      function renderWeek(){
+        weekPlanBody.innerHTML = '';
+        order.forEach(dayKey => {
+          const rows = (dayPlan[dayKey] || []).slice().sort((a,b)=> toMinutes(a.time)-toMinutes(b.time));
+          rows.forEach(entry => {
+            const tr = document.createElement('tr');
+            const tdDay = document.createElement('td'); tdDay.textContent = bgByKey[dayKey];
+            const tdTime = document.createElement('td'); tdTime.textContent = entry.time;
+            const tdTask = document.createElement('td'); tdTask.textContent = entry.task;
+            tr.appendChild(tdDay); tr.appendChild(tdTime); tr.appendChild(tdTask);
+            weekPlanBody.appendChild(tr);
+          });
         });
-      });
-    }
-
-    // ---- Дневен план + прогрес ----
-    const planBody = document.getElementById('planBody');
-    const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
-    const dateKey = todayDate.toISOString().split('T')[0];
-    if (!logs[dateKey]) logs[dateKey] = {};
-
-    function updateProgress() {
-      const total = document.querySelectorAll('#planBody button').length;
-      const done = Object.keys(logs[dateKey]).length;
-      const percent = total ? Math.round((done / total) * 100) : 0;
-      const bar = document.getElementById('progressBar');
-      bar.style.width = percent + '%';
-      bar.textContent = percent + '%';
-    }
-
-    function renderDay(){
-      planBody.innerHTML = '';
-      (dayPlan[today] || []).forEach(row => {
-        const tr = document.createElement('tr');
-        const tdTime = document.createElement('td'); tdTime.textContent = row.time;
-        const tdTask = document.createElement('td'); tdTask.textContent = row.task;
-        const tdStatus = document.createElement('td');
-        const btn = document.createElement('button');
-        btn.textContent = logs[dateKey][row.task] ? "✅ " + logs[dateKey][row.task] : "Отметни";
-        btn.onclick = () => {
-          if (logs[dateKey][row.task]) { delete logs[dateKey][row.task]; btn.textContent = "Отметни"; }
-          else { const now = new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' }); logs[dateKey][row.task] = now; btn.textContent = "✅ " + now; }
-          localStorage.setItem('dailyLogs', JSON.stringify(logs));
-          updateProgress();
-        };
-        tdStatus.appendChild(btn);
-        tr.appendChild(tdTime); tr.appendChild(tdTask); tr.appendChild(tdStatus);
-        planBody.appendChild(tr);
-      });
-      updateProgress();
-    }
-
-    // ---- Toggle Week Section ----
-    const weekSection = document.getElementById('weekSection');
-    document.getElementById('toggleWeekBtn').addEventListener('click', () => {
-      const show = weekSection.classList.toggle('hidden');
-      if (!show) { // just opened
-        renderWeek();
       }
-    });
 
-    // ---- Travel Modal ----
-    const travelBackdrop = document.getElementById('travelBackdrop');
-    const travelDays = document.getElementById('travelDays');
-    const packingListEl = document.getElementById('packingList');
-    document.getElementById('travelBtn').addEventListener('click', openTravel);
-
-    function openTravel(){
-      // build day checkboxes
-      travelDays.innerHTML = '';
-      order.forEach(k => {
-        const id = `day-${k}`;
-        const label = document.createElement('label');
-        const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.value=k;
-        const span = document.createElement('span'); span.textContent = bgByKey[k];
-        label.appendChild(cb); label.appendChild(span); travelDays.appendChild(label);
-      });
-      packingListEl.innerHTML = '';
-      travelBackdrop.style.display = 'flex';
-    }
-    function closeTravel(){ travelBackdrop.style.display = 'none'; }
-
-    function generatePacking(){
-      const selected = Array.from(travelDays.querySelectorAll('input:checked')).map(cb=>cb.value);
-      const items = new Set();
-      // base hygiene always useful
-      if (selected.length) items.add('Лична кърпа');
-      selected.forEach(dayKey => {
-        (dayPlan[dayKey]||[]).forEach(({task})=>{
-          if (/Nizoral/i.test(task)) items.add('Nizoral 2% шампоан');
-          if (/Bioblas/i.test(task) || /Zinc/i.test(task)) items.add('Шампоан с цинков пиритион');
-          if (/Corsodyl/i.test(task) || /хлорхексидин/i.test(task)) { items.add('Хлорхексидин разтвор'); items.add('Марли/тампони'); }
-          if (/Фуцидин/i.test(task)) items.add('Фуцидин крем');
-          if (/калъфка/i.test(task)) items.add('Резервна калъфка');
-          if (/кърпа/i.test(task)) items.add('Допълнителна кърпа за лице/брада');
-          if (/Вода/i.test(task)) items.add('Бутилка вода 0.5L');
-        });
-      });
-      // Render checklist
-      packingListEl.innerHTML = '';
-      if (!items.size) { packingListEl.innerHTML = '<li><em>Няма задачи в избраните дни.</em></li>'; return; }
-      items.forEach(txt => {
-        const li = document.createElement('li');
-        const cb = document.createElement('input'); cb.type='checkbox';
-        const span = document.createElement('span'); span.textContent = txt;
-        li.appendChild(cb); li.appendChild(span); packingListEl.appendChild(li);
-      });
-    }
-
-    async function copyPacking(){
-      const lines = Array.from(packingListEl.querySelectorAll('li span')).map(s=>`- [ ] ${s.textContent}`);
-      try { await navigator.clipboard.writeText(lines.join('\n')); alert('Списъкът е копиран.'); }
-      catch(e){ alert('Копирането не беше позволено от браузъра.'); }
-    }
-
-    function showHistory() {
+      // ---- Дневен план + прогрес ----
+      const planBody = document.getElementById('planBody');
       const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
-      let msg = "История последни 7 дни:\n";
-      const keys = Object.keys(logs).slice(-7);
-      keys.forEach(k => { msg += `\n${k}: ${Object.keys(logs[k]).length} задачи изпълнени`; });
-      alert(msg);
-    }
+      const dateKey = todayDate.toISOString().split('T')[0];
+      if (!logs[dateKey]) logs[dateKey] = {};
 
-    // ---- Initial render ----
-    renderDay();
+      function updateProgress() {
+        const total = document.querySelectorAll('#planBody button').length;
+        const done = Object.keys(logs[dateKey]).length;
+        const percent = total ? Math.round((done / total) * 100) : 0;
+        const bar = document.getElementById('progressBar');
+        bar.style.width = percent + '%';
+        bar.textContent = percent + '%';
+      }
+
+      function renderDay(){
+        planBody.innerHTML = '';
+        (dayPlan[today] || []).forEach(row => {
+          const tr = document.createElement('tr');
+          const tdTime = document.createElement('td'); tdTime.textContent = row.time;
+          const tdTask = document.createElement('td'); tdTask.textContent = row.task;
+          const tdStatus = document.createElement('td');
+          const btn = document.createElement('button');
+          btn.textContent = (logs[dateKey] && logs[dateKey][row.task]) ? "✅ " + logs[dateKey][row.task] : "Отметни";
+          btn.onclick = () => {
+            if (logs[dateKey][row.task]) { delete logs[dateKey][row.task]; btn.textContent = "Отметни"; }
+            else { const nowT = new Date().toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' }); logs[dateKey][row.task] = nowT; btn.textContent = "✅ " + nowT; }
+            localStorage.setItem('dailyLogs', JSON.stringify(logs));
+            updateProgress();
+          };
+          tdStatus.appendChild(btn);
+          tr.appendChild(tdTime); tr.appendChild(tdTask); tr.appendChild(tdStatus);
+          planBody.appendChild(tr);
+        });
+        updateProgress();
+      }
+
+      // ---- Toggle Week Section ----
+      const weekSection = document.getElementById('weekSection');
+      document.getElementById('toggleWeekBtn').addEventListener('click', () => {
+        weekSection.classList.toggle('hidden');
+        if (!weekSection.classList.contains('hidden')) renderWeek();
+      });
+
+      // ---- Travel Modal ----
+      const travelBackdrop = document.getElementById('travelBackdrop');
+      const travelDays = document.getElementById('travelDays');
+      const packingListEl = document.getElementById('packingList');
+      document.getElementById('travelBtn').addEventListener('click', openTravel);
+      document.getElementById('planBtn').addEventListener('click', openPlan);
+      document.getElementById('resetBtn').addEventListener('click', resetProgress);
+
+      function openTravel(){
+        travelDays.innerHTML = '';
+        order.forEach(k => {
+          const id = `day-${k}`;
+          const label = document.createElement('label');
+          const cb = document.createElement('input'); cb.type='checkbox'; cb.id=id; cb.value=k;
+          const span = document.createElement('span'); span.textContent = bgByKey[k];
+          label.appendChild(cb); label.appendChild(span); travelDays.appendChild(label);
+        });
+        packingListEl.innerHTML = '';
+        travelBackdrop.style.display = 'flex';
+      }
+      function closeTravel(){ travelBackdrop.style.display = 'none'; }
+
+      function generatePacking(){
+        const selected = Array.from(travelDays.querySelectorAll('input:checked')).map(cb=>cb.value);
+        const items = new Set();
+        if (selected.length) items.add('Лична кърпа');
+        selected.forEach(dayKey => {
+          (dayPlan[dayKey]||[]).forEach(({task})=>{
+            if (/Nizoral/i.test(task)) items.add('Nizoral 2% шампоан');
+            if (/Bioblas/i.test(task) || /Zinc/i.test(task)) items.add('Шампоан с цинков пиритион');
+            if (/Corsodyl/i.test(task) || /хлорхексидин/i.test(task)) { items.add('Хлорхексидин разтвор'); items.add('Марли/тампони'); }
+            if (/Фуцидин/i.test(task)) items.add('Фуцидин крем');
+            if (/калъфка/i.test(task)) items.add('Резервна калъфка');
+            if (/кърпа/i.test(task)) items.add('Допълнителна кърпа за лице/брада');
+            if (/Вода/i.test(task)) items.add('Бутилка вода 0.5L');
+            if (/Витамин D3|K2/i.test(task)) { items.add('Витамин D3 + K2'); items.add('Кутийка за хапчета'); }
+            if (/Омега|Omega/i.test(task)) items.add('Омега‑3 капсули');
+            if (/Витамин C/i.test(task)) items.add('Витамин C');
+            if (/Магнезиев|Magnesium/i.test(task)) items.add('Магнезий (глицинат)');
+            if (/Цинк|Zinc/i.test(task)) items.add('Цинк');
+          });
+        });
+        packingListEl.innerHTML = '';
+        if (!items.size) { packingListEl.innerHTML = '<li><em>Няма задачи в избраните дни.</em></li>'; return; }
+        items.forEach(txt => {
+          const li = document.createElement('li');
+          const cb = document.createElement('input'); cb.type='checkbox';
+          const span = document.createElement('span'); span.textContent = txt;
+          li.appendChild(cb); li.appendChild(span); packingListEl.appendChild(li);
+        });
+      }
+
+      async function copyPacking(){
+        const lines = Array.from(packingListEl.querySelectorAll('li span')).map(s=>`- [ ] ${s.textContent}`);
+        try { await navigator.clipboard.writeText(lines.join('
+')); alert('Списъкът е копиран.'); }
+        catch(e){ alert('Копирането не беше позволено от браузъра.'); }
+      }
+
+      function showHistory() {
+        const logs = JSON.parse(localStorage.getItem('dailyLogs') || '{}');
+        let msg = "История последни 7 дни:
+";
+        const keys = Object.keys(logs).slice(-7);
+        keys.forEach(k => { msg += `
+${k}: ${Object.keys(logs[k]).length} задачи изпълнени`; });
+        alert(msg);
+      }
+
+      // ---- План модал ----
+      function openPlan(){ document.getElementById('planBackdrop').style.display = 'flex'; }
+      function closePlan(){ document.getElementById('planBackdrop').style.display = 'none'; }
+
+      // ---- Ресет прогрес ----
+      function resetProgress(){
+        const text = "Това действие ще рестартира целия цикъл и ще загубите прогреса до момента. Сигурни ли сте, че искате да го направите?
+
+Въведете YES за потвърждение или NO за отказ.";
+        const ans = prompt(text, "NO");
+        if (!ans) return;
+        const val = String(ans).trim().toLowerCase();
+        if (val === 'yes') {
+          localStorage.removeItem('dailyLogs');
+          localStorage.setItem('startDate', new Date());
+          alert('Прогресът е нулиран и цикълът е рестартиран.');
+          location.reload();
+        } else {
+          alert('Операцията е отказана.');
+        }
+      }
+
+      // ---- Initial render ----
+      renderDay();
+
+      // expose for modal buttons
+      window.generatePacking = generatePacking;
+      window.copyPacking = copyPacking;
+      window.closeTravel = closeTravel;
+
+    } catch(err){
+      alert('Грешка при инициализация: ' + err.message);
+    }
+  });
   </script>
 </body>
 </html>
